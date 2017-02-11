@@ -33,6 +33,8 @@ var client = new Client();
 //=========================================================
 
 var bot = new builder.UniversalBot(connector);
+var I = 0;
+
 bot.dialog('/', [
     function (session, args, next) {
         if (!session.userData.name) {
@@ -108,7 +110,7 @@ bot.dialog('/getSymptoms', [
     				session.send("Sorry I don't have knowledge about that");
     				session.beginDialog('/getSymptoms');
     		} else {
-    			session.userData.evidence = []
+    			session.userData.evidence = [];
     			for(var i=0; i<data.mentions.length; i++) {
 	    			session.userData.evidence.push({ 
 	    				"id": data.mentions[i].id,
@@ -128,7 +130,7 @@ bot.dialog('/getFurtherSymptoms', [
         builder.Prompts.text(session, 'Do you have any more symptoms?');
     },
     function (session, results) {
-    	if(results.response == 'no' || results.response == 'No') {
+    	if(results.response.toLowerCase() == 'no') {
     		console.log("no in further symptoms");
     		var args = {
     			data: { "sex": session.userData.sex,
@@ -174,16 +176,41 @@ bot.dialog('/interactLoop', [
     function (session) {
     	console.log("InteractLoop");
     	console.log(session.userData.questions);
-    	for(var i=0; i<session.userData.questions.question.items.length; i++) {
-	    	session.send(session.userData.questions.question.items[i].name);
-	    	var choices = "";
-	    	for(var j=0; j<session.userData.questions.question.items[i].choices.length-1; j++) {
-	    		choices = choices.concat(j, "-", session.userData.questions.question.items[i].choices[j].label, "; ");
-	    	}
-	        builder.Prompts.text(session, choices);
-    	}
+    	builder.Prompts.text(session, "".concat(session.userData.questions.question.items[I].name, "? Yes or No"));
     },
     function (session, results) {
+    	if(I == 0) {
+    		session.userData.questionResponses = [];
+    	}
+    	if(results.response.toLowerCase() == "yes") {
+    		session.userData.questionResponses.push("present");
+    	} else {
+    		session.userData.questionResponses.push("absent");
+    	}
+    	console.log("".concat(session.userData.questionResponses[I], "###########", I));
+    	I++;
+    	if(I >= session.userData.questions.question.items.length) {
+    		I = 0;
+    		session.userData.evidence = [];
+    		for(var i=0; i<session.userData.questions.question.items.length; i++) {
+    			session.userData.evidence.push({
+    				"id": session.userData.questions.question.items[i].id,
+	    			"choice_id" : session.userData.questionResponses[i]
+    			});
+    		}
+    		var args = {
+    			data: { "sex": session.userData.sex,
+    					"age": session.userData.age,
+    					"evidence": session.userData.evidence
+    			},
+    			headers: { "Content-Type": "application/json", "App-Id" : APP_ID, "App-Key" : APP_KEY }
+			};
+			console.log(args);
+    		client.post("https://api.infermedica.com/v2/diagnosis", args, function (data, response) {
+				console.log(data);
+				session.userData.questions = data;
+			});
+    	}
     	session.beginDialog('/interactLoop');
     }
 ]);
