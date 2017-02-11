@@ -1,12 +1,18 @@
 // Add your requirements
 var restify = require('restify');
 var builder = require('botbuilder');
+var infermedicaapilib = require('infermedicaapilib');
 
 //=========================================================
 // Bot Setup
 //=========================================================
 
 // Setup Restify Server
+
+var config = infermedicaapilib.configuration;
+config.appId =
+config.apikey = '523be4ddcc20678559583725c947b66c';
+
 var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
    console.log('%s listening to %s', server.name, server.url); 
