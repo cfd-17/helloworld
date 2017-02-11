@@ -3,7 +3,6 @@ var restify = require('restify');
 var builder = require('botbuilder');
 var Client = require('node-rest-client').Client;
 
-
 //=========================================================
 // Bot Setup
 //=========================================================
@@ -23,51 +22,57 @@ var connector = new builder.ChatConnector({
 var bot = new builder.UniversalBot(connector);
 server.post('/api/messages', connector.listen());
 
-// Connect to Infermedica
-var client = new Client();
-
-
-var args = {
-    data: {
-    "sex": "male",
-    "age": 30,
-    "evidence": [
-      {"id": "s_1193", "choice_id": "present"},
-      {"id": "s_488", "choice_id": "present"},
-      {"id": "s_418", "choice_id": "present"}
-    ]
-  },
-    headers: { "Content-Type": "application/json", "App-Id" : "b2a46cbc", "App-Key" : "523be4ddcc20678559583725c947b66c" }
-};
- 
-client.post("https://api.infermedica.com/v2/diagnosis", args, function (data, response) {
-    // parsed response body as js object 
-    console.log(data);
-});
-
 //=========================================================
 // Bots Dialogs
 //=========================================================
 
+var bot = new builder.UniversalBot(connector);
 bot.dialog('/', [
     function (session, args, next) {
         if (!session.userData.name) {
-            session.beginDialog('/profile');
-        } else {
-            next();
+            session.beginDialog('/getUserDataName');
+        }
+        else if (!session.userData.age) {
+        	session.beginDialog('/getUserDataAge');
+        }
+        else if (!session.userData.symptoms) {
+            session.beginDialog('/getSymptoms');
+        }
+        else {
+        	next();
         }
     },
     function (session, results) {
-        session.send('Hello %s!', session.userData.name);
+        session.send('Hello %s, %s, %s', session.userData.name, session.userData.age, session.userData.symptoms);
     }
 ]);
 
-bot.dialog('/profile', [
+bot.dialog('/getUserDataName', [
     function (session) {
         builder.Prompts.text(session, 'Hi! What is your name?');
     },
     function (session, results) {
         session.userData.name = results.response;
-        session.endDialog();
+        session.beginDialog('/');
+    }
+]);
+
+bot.dialog('/getUserDataAge', [
+    function (session) {
+        builder.Prompts.text(session, 'What is your age?');
+    },
+    function (session, results) {
+        session.userData.age = results.response;
+        session.beginDialog('/');
+    }
+]);
+
+bot.dialog('/getSymptoms', [
+    function (session) {
+        builder.Prompts.text(session, 'Enter your symptoms');
+    },
+    function (session, results) {
+        session.userData.symptoms = results.response;
+        session.beginDialog('/');
     }
 ]);
