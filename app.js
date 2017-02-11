@@ -176,7 +176,8 @@ bot.dialog('/interactLoop', [
     function (session) {
     	console.log("InteractLoop");
     	console.log(session.userData.questions);
-    	builder.Prompts.text(session, "".concat(session.userData.questions.question.items[I].name, "? Yes or No"));
+    	session.send("Sorry \n\nsoo");
+    	builder.Prompts.text(session, "".concat(session.userData.questions.question.items[I].text, "? Yes or No"));
     },
     function (session, results) {
     	if(I == 0) {
