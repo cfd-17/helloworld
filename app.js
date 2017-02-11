@@ -139,7 +139,13 @@ bot.dialog('/getFurtherSymptoms', [
 			};
 			console.log(args);
     		client.post("https://api.infermedica.com/v2/diagnosis", args, function (data, response) {
+				
 				console.log(data);
+				console.log(data.question.items);
+				console.log(data.question.items[0].choices);
+				
+				session.userData.questions = data;
+				session.beginDialog('/interactLoop');
 			});
     	} else {
 	        var args = {
@@ -161,5 +167,15 @@ bot.dialog('/getFurtherSymptoms', [
 	    		session.beginDialog('/getFurtherSymptoms');
 			});
 		}
+    }
+]);
+
+bot.dialog('/interactLoop', [
+    function (session) {
+    	session.userData.questions.items
+        builder.Prompts.text(session, 'interactLoop');
+    },
+    function (session, results) {
+    	
     }
 ]);
