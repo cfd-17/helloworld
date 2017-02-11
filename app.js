@@ -172,10 +172,18 @@ bot.dialog('/getFurtherSymptoms', [
 
 bot.dialog('/interactLoop', [
     function (session) {
-    	session.userData.questions.items
-        builder.Prompts.text(session, 'interactLoop');
+    	console.log("InteractLoop");
+    	console.log(session.userData.questions);
+    	for(var i=0; i<session.userData.questions.question.items.length; i++) {
+	    	session.send(session.userData.questions.question.items[i].name);
+	    	var choices = "";
+	    	for(var j=0; j<session.userData.questions.question.items[i].choices.length-1; j++) {
+	    		choices = choices.concat(j, "-", session.userData.questions.question.items[i].choices[j].label, "; ");
+	    	}
+	        builder.Prompts.text(session, choices);
+    	}
     },
     function (session, results) {
-    	
+    	session.beginDialog('/interactLoop');
     }
 ]);
