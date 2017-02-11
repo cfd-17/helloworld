@@ -3,6 +3,9 @@ var restify = require('restify');
 var builder = require('botbuilder');
 var Client = require('node-rest-client').Client;
 
+var APP_ID = "b2a46cbc"
+var APP_KEY = "523be4ddcc20678559583725c947b66c"
+
 //=========================================================
 // Bot Setup
 //=========================================================
@@ -22,6 +25,9 @@ var connector = new builder.ChatConnector({
 var bot = new builder.UniversalBot(connector);
 server.post('/api/messages', connector.listen());
 
+// Initialise client
+var client = new Client();
+
 //=========================================================
 // Bots Dialogs
 //=========================================================
@@ -31,6 +37,9 @@ bot.dialog('/', [
     function (session, args, next) {
         if (!session.userData.name) {
             session.beginDialog('/getUserDataName');
+        }
+        else if (!session.userData.sex) {
+        	session.beginDialog('/getUserDataSex');
         }
         else if (!session.userData.age) {
         	session.beginDialog('/getUserDataAge');
@@ -50,9 +59,23 @@ bot.dialog('/', [
 bot.dialog('/getUserDataName', [
     function (session) {
         builder.Prompts.text(session, 'Hi! What is your name?');
+        console.log("get name");
     },
     function (session, results) {
         session.userData.name = results.response;
+        console.log("store name");
+        session.beginDialog('/');
+    }
+]);
+
+bot.dialog('/getUserDataSex', [
+    function (session) {
+        builder.Prompts.text(session, 'What is your gender?');
+        console.log("get sex");
+    },
+    function (session, results) {
+        session.userData.sex = results.response;
+        console.log("store sex");
         session.beginDialog('/');
     }
 ]);
@@ -60,19 +83,83 @@ bot.dialog('/getUserDataName', [
 bot.dialog('/getUserDataAge', [
     function (session) {
         builder.Prompts.text(session, 'What is your age?');
+        console.log("get age");
     },
     function (session, results) {
         session.userData.age = results.response;
+        console.log("store age");
         session.beginDialog('/');
     }
 ]);
 
 bot.dialog('/getSymptoms', [
     function (session) {
-        builder.Prompts.text(session, 'Enter your symptoms');
+        builder.Prompts.text(session, 'what symptoms do you have?');
+        console.log("get symptoms");
     },
     function (session, results) {
-        session.userData.symptoms = results.response;
-        session.beginDialog('/');
+        var args = {
+    		data: { "text" : results.response },
+    		headers: { "Content-Type": "application/json", "App-Id" : APP_ID, "App-Key" : APP_KEY }
+		};
+		client.post("https://api.infermedica.com/v2/parse", args, function (data, response) {
+			console.log(data);
+    		if(data.mentions.length < 1) {
+    				session.send("Sorry I don't have knowledge about that");
+    				session.beginDialog('/getSymptoms');
+    		} else {
+    			session.userData.evidence = []
+    			for(var i=0; i<data.mentions.length; i++) {
+	    			session.userData.evidence.push({ 
+	    				"id": data.mentions[i].id,
+	    				"choice_id" : data.mentions[i].choice_id
+	    			});
+    			}
+    			console.log("going to further symptoms");
+    			session.beginDialog('/getFurtherSymptoms');
+    		}
+		});
+		console.log("symptoms over");
+    }
+]);
+
+bot.dialog('/getFurtherSymptoms', [
+    function (session) {
+        builder.Prompts.text(session, 'Do you have any more symptoms?');
+    },
+    function (session, results) {
+    	if(results.response == 'no' || results.response == 'No') {
+    		console.log("no in further symptoms");
+    		var args = {
+    			data: { "sex": session.userData.sex,
+    					"age": session.userData.age,
+    					"evidence": session.userData.evidence
+    			},
+    			headers: { "Content-Type": "application/json", "App-Id" : APP_ID, "App-Key" : APP_KEY }
+			};
+			console.log(args);
+    		client.post("https://api.infermedica.com/v2/diagnosis", args, function (data, response) {
+				console.log(data);
+			});
+    	} else {
+	        var args = {
+	    		data: { "text" : results.response },
+	    		headers: { "Content-Type": "application/json", "App-Id" : APP_ID, "App-Key" : APP_KEY }
+			};
+			client.post("https://api.infermedica.com/v2/parse", args, function (data, response) {
+				console.log(data);
+	    		if(data.mentions.length < 1) {
+	    				session.send("Sorry I don't have knowledge about that");
+	    		} else {
+	    				for(var i=0; i<data.mentions.length; i++) {
+			    			session.userData.evidence.push({ 
+			    				"id": data.mentions[i].id,
+			    				"choice_id" : data.mentions[i].choice_id
+			    			});
+    					}
+	    		}
+	    		session.beginDialog('/getFurtherSymptoms');
+			});
+		}
     }
 ]);
