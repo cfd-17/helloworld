@@ -76,7 +76,8 @@ bot.dialog('/getUserDataName', [
 
 bot.dialog('/getUserDataSex', [
     function (session) {
-        builder.Prompts.text(session, 'What is your gender?');
+    	var namePrompt = "".concat("Hey ", session.userData.name, "!", " What is your gender?");
+        builder.Prompts.text(session, namePrompt);
         console.log("get sex");
     },
     function (session, results) {
@@ -278,9 +279,9 @@ bot.dialog('/interactLoop', [
         	console.log("######################################");
         	session.userData.questions = data;
         	if(parseFloat(data.conditions[0].probability) > 0.9 || I>15 ) {
-        		var chatprint = "Probable Diseases are\n\r".concat(data.conditions[0].name, ' : ', parseFloat(data.conditions[0].probability)*100, "%\n\r");
+        		var chatprint = "Probable Diseases are\n\r".concat(data.conditions[0].name, ' : ', (parseFloat(data.conditions[0].probability)*100).toFixed(2), "%\n\r");
         		for(var i=1; i<data.conditions.length && parseFloat(data.conditions[i].probability) > 0.7; i++) {
-        				chatprint = chatprint.concat(data.conditions[i].name, ' : ', parseFloat(data.conditions[i].probability)*100, "%\n\r");
+        				chatprint = chatprint.concat(data.conditions[i].name, ' : ', (parseFloat(data.conditions[i].probability)*100).toFixed(2), "%\n\r");
         		}
         		session.send(chatprint);
         		I = 0; 
