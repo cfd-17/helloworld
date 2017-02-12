@@ -50,13 +50,8 @@ bot.dialog('/', [
             session.beginDialog('/getSymptoms');
         }
         else {
-        	next();
+        	session.send('Thank You!');
         }
-    },
-    function (session, results) {
-        session.send('Thank You!');
-        session.userData.sex = null;
-        session.userData.age = null;
     }
 ]);
 
@@ -66,8 +61,15 @@ bot.dialog('/getUserDataName', [
         console.log("get name");
     },
     function (session, results) {
-        session.userData.name = results.response;
-        console.log("store name");
+    	if(results.response == 'reset') {
+    		session.userData.name = null;
+    		session.userData.sex = null;
+        	session.userData.age = null;
+        	session.userData.status = null;
+    	} else {
+    		session.userData.name = results.response;
+        	console.log("store name");
+    	}
         session.beginDialog('/');
     }
 ]);
@@ -78,8 +80,15 @@ bot.dialog('/getUserDataSex', [
         console.log("get sex");
     },
     function (session, results) {
-        session.userData.sex = results.response;
-        console.log("store sex");
+    	if(results.response == 'reset') {
+    		session.userData.name = null;
+    		session.userData.sex = null;
+        	session.userData.age = null;
+        	session.userData.status = null;
+    	} else {
+        	session.userData.sex = results.response;
+        	console.log("store sex");
+    	}
         session.beginDialog('/');
     }
 ]);
@@ -90,8 +99,15 @@ bot.dialog('/getUserDataAge', [
         console.log("get age");
     },
     function (session, results) {
-        session.userData.age = results.response;
-        console.log("store age");
+    	if(results.response == 'reset') {
+    		session.userData.name = null;
+    		session.userData.sex = null;
+        	session.userData.age = null;
+        	session.userData.status = null;
+    	} else {
+        	session.userData.age = results.response;
+        	console.log("store age");
+    	}
         session.beginDialog('/');
     }
 ]);
@@ -102,6 +118,13 @@ bot.dialog('/getSymptoms', [
         console.log("get symptoms");
     },
     function (session, results) {
+    	if(results.response == 'reset') {
+    		session.userData.name = null;
+    		session.userData.sex = null;
+        	session.userData.age = null;
+        	session.userData.status = null;
+        	session.beginDialog('/');
+    	}
         var args = {
     		data: { "text" : results.response },
     		headers: { "Content-Type": "application/json", "App-Id" : APP_ID, "App-Key" : APP_KEY }
@@ -132,6 +155,13 @@ bot.dialog('/getFurtherSymptoms', [
         builder.Prompts.text(session, 'Do you have any more symptoms?');
     },
     function (session, results) {
+    	if(results.response == 'reset') {
+    		session.userData.name = null;
+    		session.userData.sex = null;
+        	session.userData.age = null;
+        	session.userData.status = null;
+        	session.beginDialog('/');
+    	}
     	if(results.response.toLowerCase() == 'no') {
     		console.log("no in further symptoms");
     		var args = {
@@ -195,6 +225,13 @@ bot.dialog('/interactLoop', [
 		builder.Prompts.text(session, chatprint);
     },
     function (session, results) {
+    	if(results.response == 'reset') {
+    		session.userData.name = null;
+    		session.userData.sex = null;
+        	session.userData.age = null;
+        	session.userData.status = null;
+        	session.beginDialog('/');
+    	}
     	var questionResponses = results.response;
 
     	if(session.userData.questions.question.type == 'single') {
@@ -248,7 +285,7 @@ bot.dialog('/interactLoop', [
         		session.send(chatprint);
         		I = 0; 
         		session.userData.status = "done";
-        		session.reset('/');
+        		session.beginDialog('/');
         	} else {
         		I++;
         		session.beginDialog('/interactLoop');
