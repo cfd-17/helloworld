@@ -33,6 +33,7 @@ var client = new Client();
 //=========================================================
 
 var bot = new builder.UniversalBot(connector);
+var I = 1;
 
 bot.dialog('/', [
     function (session, args, next) {
@@ -45,7 +46,7 @@ bot.dialog('/', [
         else if (!session.userData.age) {
         	session.beginDialog('/getUserDataAge');
         }
-        else if (!session.userData.symptoms) {
+        else if (!session.userData.status) {
             session.beginDialog('/getSymptoms');
         }
         else {
@@ -53,7 +54,7 @@ bot.dialog('/', [
         }
     },
     function (session, results) {
-        session.send('Hello %s, %s, %s', session.userData.name, session.userData.age, session.userData.symptoms);
+        session.send('Thank You!');
     }
 ]);
 
@@ -237,7 +238,18 @@ bot.dialog('/interactLoop', [
         	console.log(data.question.items);
         	console.log("######################################");
         	session.userData.questions = data;
-        	session.beginDialog('/interactLoop');
+        	if(parseFloat(data.conditions[0].probability) > 0.9 || I>15 ) {
+        		var chatprint = "Probable Diseases are\n".concat(data.conditions[0].name, ' : ', parseFloat(data.conditions[0].probability)*100, "%\n");
+        		for(var i=1; i<data.conditions.length && parseFloat(data.conditions[i].probability) > 0.7; i++) {
+        				chatprint = chatprint.concat(data.conditions[i].name, ' : ', parseFloat(data.conditions[i].probability)*100, "%\n");
+        		}
+        		session.send(chatprint);
+        		I = 0;
+        		session.endConversation();
+        	} else {
+        		I++;
+        		session.beginDialog('/interactLoop');
+        	}
         });
     }
 ]);
