@@ -55,6 +55,8 @@ bot.dialog('/', [
     },
     function (session, results) {
         session.send('Thank You!');
+        session.userData.sex = null;
+        session.userData.age = null;
     }
 ]);
 
@@ -244,8 +246,9 @@ bot.dialog('/interactLoop', [
         				chatprint = chatprint.concat(data.conditions[i].name, ' : ', parseFloat(data.conditions[i].probability)*100, "%\n");
         		}
         		session.send(chatprint);
-        		I = 0;
-        		session.endConversation();
+        		I = 0; 
+        		session.userData.status = "done";
+        		session.reset('/');
         	} else {
         		I++;
         		session.beginDialog('/interactLoop');
