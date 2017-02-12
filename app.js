@@ -3,8 +3,8 @@ var restify = require('restify');
 var builder = require('botbuilder');
 var Client = require('node-rest-client').Client;
 
-var APP_ID = "b2a46cbc"
-var APP_KEY = "523be4ddcc20678559583725c947b66c"
+var APP_ID = "b2a46cbc"	//"7df8fc3b"
+var APP_KEY = "523be4ddcc20678559583725c947b66c" //"984f6248377fc62d6594737d7dd5f449"
 
 //=========================================================
 // Bot Setup
@@ -50,6 +50,7 @@ bot.dialog('/', [
             session.beginDialog('/getSymptoms');
         }
         else {
+        	session.userData.status = null;
         	session.send('Thank You!');
         }
     }
@@ -61,7 +62,7 @@ bot.dialog('/getUserDataName', [
         console.log("get name");
     },
     function (session, results) {
-    	if(results.response.toLowerCase() == 'reset') {
+    	if(results.response.toLowerCase() == '/reset') {
     		session.userData.name = null;
     		session.userData.sex = null;
         	session.userData.age = null;
@@ -81,14 +82,19 @@ bot.dialog('/getUserDataSex', [
         console.log("get sex");
     },
     function (session, results) {
-    	if(results.response.toLowerCase() == 'reset') {
+    	if(results.response.toLowerCase() == '/reset') {
     		session.userData.name = null;
     		session.userData.sex = null;
         	session.userData.age = null;
         	session.userData.status = null;
     	} else {
-        	session.userData.sex = results.response;
-        	console.log("store sex");
+    		if(results.response == 'male' || results.response == 'female') {
+        		session.userData.sex = results.response;
+        		console.log("store sex");
+        	} else {
+        		session.userData.sex = null;
+        		session.beginDialog('/getUserDataSex');
+        	}
     	}
         session.beginDialog('/');
     }
@@ -100,13 +106,18 @@ bot.dialog('/getUserDataAge', [
         console.log("get age");
     },
     function (session, results) {
-    	if(results.response.toLowerCase() == 'reset') {
+    	if(results.response.toLowerCase() == '/reset') {
     		session.userData.name = null;
     		session.userData.sex = null;
         	session.userData.age = null;
         	session.userData.status = null;
     	} else {
-        	session.userData.age = results.response;
+    		if(isNaN(results.response)) {
+    			session.userData.age = null;
+        		session.beginDialog('/getUserDataAge');
+    		} else {
+    			session.userData.age = results.response;	
+    		}
         	console.log("store age");
     	}
         session.beginDialog('/');
@@ -119,7 +130,7 @@ bot.dialog('/getSymptoms', [
         console.log("get symptoms");
     },
     function (session, results) {
-    	if(results.response.toLowerCase() == 'reset') {
+    	if(results.response.toLowerCase() == '/reset' || (!results.response.toLowerCase().includes('nose') && results.response.toLowerCase().includes('no'))) {
     		session.userData.name = null;
     		session.userData.sex = null;
         	session.userData.age = null;
@@ -156,16 +167,16 @@ bot.dialog('/getFurtherSymptoms', [
         builder.Prompts.text(session, 'Do you have any more symptoms?');
     },
     function (session, results) {
-    	if(results.response.toLowerCase() == 'reset') {
+    	if(results.response.toLowerCase() == '/reset') {
     		session.userData.name = null;
     		session.userData.sex = null;
         	session.userData.age = null;
         	session.userData.status = null;
         	session.beginDialog('/');
     	}
-    	if(results.response.toLowerCase() == 'no') {
+    	if(!results.response.toLowerCase().includes('nose') && results.response.toLowerCase().includes('no')) {
     		console.log("no in further symptoms");
-    		var args = {
+    		var args = { 
     			data: { "sex": session.userData.sex,
     					"age": session.userData.age,
     					"evidence": session.userData.evidence
@@ -226,7 +237,7 @@ bot.dialog('/interactLoop', [
 		builder.Prompts.text(session, chatprint);
     },
     function (session, results) {
-    	if(results.response.toLowerCase() == 'reset') {
+    	if(results.response.toLowerCase() == '/reset') {
     		session.userData.name = null;
     		session.userData.sex = null;
         	session.userData.age = null;
@@ -273,15 +284,19 @@ bot.dialog('/interactLoop', [
     	console.log(args);
     	console.log(args.data.evidence);
         client.post("https://api.infermedica.com/v2/diagnosis", args, function (data, response) {
-        	console.log("######################################");
         	console.log(data);
         	console.log(data.question.items);
         	console.log("######################################");
+        	console.log(data.extras);
+        	console.log("######################################");
         	session.userData.questions = data;
-        	if(parseFloat(data.conditions[0].probability) > 0.9 || I>15 ) {
-        		var chatprint = "Probable Diseases are\n\r".concat(data.conditions[0].name, ' : ', (parseFloat(data.conditions[0].probability)*100).toFixed(2), "%\n\r");
+        	if(parseFloat(data.conditions[0].probability) > 0.9 || I>10 ) {
+        		data.conditions[0].name.split(' ').join('+')
+        		var link = "https://en.wikipedia.org/wiki/Special:Search?search=".concat(data.conditions[0].name.split(' ').join('+'));
+        		var chatprint = "Probable Diseases are\n\r".concat(data.conditions[0].name, ' : ', (parseFloat(data.conditions[0].probability)*100).toFixed(2), "%\n\r", link, "\n\r");
         		for(var i=1; i<data.conditions.length && parseFloat(data.conditions[i].probability) > 0.7; i++) {
-        				chatprint = chatprint.concat(data.conditions[i].name, ' : ', (parseFloat(data.conditions[i].probability)*100).toFixed(2), "%\n\r");
+        				link = "https://en.wikipedia.org/wiki/Special:Search?search=".concat(data.conditions[i].name.split(' ').join('+'));
+        				chatprint = chatprint.concat(data.conditions[i].name, ' : ', (parseFloat(data.conditions[i].probability)*100).toFixed(2), "%\n\r", link, "\n\r");
         		}
         		session.send(chatprint);
         		I = 0; 
