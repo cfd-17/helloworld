@@ -187,13 +187,12 @@ bot.dialog('/interactLoop', [
 			for(var i=0; i<session.userData.questions.question.items.length; i++) {
 				chatprint = chatprint.concat("(", i+1,")-> " ,session.userData.questions.question.items[i].name, "\n");
 			}
-			chatprint = chatprint.concat("(multiple options with comma seperated)");
+			chatprint = chatprint.concat("(multiple options with spaces)");
 		}
 		builder.Prompts.text(session, chatprint);
     },
     function (session, results) {
     	var questionResponses = results.response;
-    	session.userData.evidence = [];
 
     	if(session.userData.questions.question.type == 'single') {
     		if(questionResponses.toLowerCase() == 'yes') {
@@ -235,7 +234,7 @@ bot.dialog('/interactLoop', [
         client.post("https://api.infermedica.com/v2/diagnosis", args, function (data, response) {
         	console.log("######################################");
         	console.log(data);
-        	console.log(data.items);
+        	console.log(data.question.items);
         	console.log("######################################");
         	session.userData.questions = data;
         	session.beginDialog('/interactLoop');
