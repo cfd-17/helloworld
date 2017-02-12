@@ -61,7 +61,7 @@ bot.dialog('/getUserDataName', [
         console.log("get name");
     },
     function (session, results) {
-    	if(results.response == 'reset') {
+    	if(results.response.toLowerCase() == 'reset') {
     		session.userData.name = null;
     		session.userData.sex = null;
         	session.userData.age = null;
@@ -80,7 +80,7 @@ bot.dialog('/getUserDataSex', [
         console.log("get sex");
     },
     function (session, results) {
-    	if(results.response == 'reset') {
+    	if(results.response.toLowerCase() == 'reset') {
     		session.userData.name = null;
     		session.userData.sex = null;
         	session.userData.age = null;
@@ -99,7 +99,7 @@ bot.dialog('/getUserDataAge', [
         console.log("get age");
     },
     function (session, results) {
-    	if(results.response == 'reset') {
+    	if(results.response.toLowerCase() == 'reset') {
     		session.userData.name = null;
     		session.userData.sex = null;
         	session.userData.age = null;
@@ -118,7 +118,7 @@ bot.dialog('/getSymptoms', [
         console.log("get symptoms");
     },
     function (session, results) {
-    	if(results.response == 'reset') {
+    	if(results.response.toLowerCase() == 'reset') {
     		session.userData.name = null;
     		session.userData.sex = null;
         	session.userData.age = null;
@@ -155,7 +155,7 @@ bot.dialog('/getFurtherSymptoms', [
         builder.Prompts.text(session, 'Do you have any more symptoms?');
     },
     function (session, results) {
-    	if(results.response == 'reset') {
+    	if(results.response.toLowerCase() == 'reset') {
     		session.userData.name = null;
     		session.userData.sex = null;
         	session.userData.age = null;
@@ -207,25 +207,25 @@ bot.dialog('/getFurtherSymptoms', [
 bot.dialog('/interactLoop', [
     function (session) {
     	console.log("InteractLoop");
-    	var chatprint = "".concat(session.userData.questions.question.text, "\n");
+    	var chatprint = "".concat(session.userData.questions.question.text, "\n\r");
 
     	if(session.userData.questions.question.type == 'single') {
-    		chatprint = chatprint.concat("-> Yes\n-> No");
+    		chatprint = chatprint.concat("-> Yes\n\r-> No");
 		} else if(session.userData.questions.question.type == 'group_single') {
 			for(var i=0; i<session.userData.questions.question.items.length; i++) {
-				chatprint = chatprint.concat("(", i+1,")-> " ,session.userData.questions.question.items[i].name, "\n");
+				chatprint = chatprint.concat("(", i+1,")-> " ,session.userData.questions.question.items[i].name, "\n\r");
 			}
 			chatprint = chatprint.concat("(choose only one number)");
 		} else {
 			for(var i=0; i<session.userData.questions.question.items.length; i++) {
-				chatprint = chatprint.concat("(", i+1,")-> " ,session.userData.questions.question.items[i].name, "\n");
+				chatprint = chatprint.concat("(", i+1,")-> " ,session.userData.questions.question.items[i].name, "\n\r");
 			}
 			chatprint = chatprint.concat("(multiple options with spaces)");
 		}
 		builder.Prompts.text(session, chatprint);
     },
     function (session, results) {
-    	if(results.response == 'reset') {
+    	if(results.response.toLowerCase() == 'reset') {
     		session.userData.name = null;
     		session.userData.sex = null;
         	session.userData.age = null;
@@ -278,9 +278,9 @@ bot.dialog('/interactLoop', [
         	console.log("######################################");
         	session.userData.questions = data;
         	if(parseFloat(data.conditions[0].probability) > 0.9 || I>15 ) {
-        		var chatprint = "Probable Diseases are\n".concat(data.conditions[0].name, ' : ', parseFloat(data.conditions[0].probability)*100, "%\n");
+        		var chatprint = "Probable Diseases are\n\r".concat(data.conditions[0].name, ' : ', parseFloat(data.conditions[0].probability)*100, "%\n\r");
         		for(var i=1; i<data.conditions.length && parseFloat(data.conditions[i].probability) > 0.7; i++) {
-        				chatprint = chatprint.concat(data.conditions[i].name, ' : ', parseFloat(data.conditions[i].probability)*100, "%\n");
+        				chatprint = chatprint.concat(data.conditions[i].name, ' : ', parseFloat(data.conditions[i].probability)*100, "%\n\r");
         		}
         		session.send(chatprint);
         		I = 0; 
