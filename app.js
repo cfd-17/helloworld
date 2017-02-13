@@ -3,8 +3,8 @@ var restify = require('restify');
 var builder = require('botbuilder');
 var Client = require('node-rest-client').Client;
 
-var APP_ID = "b2a46cbc"	//"7df8fc3b"
-var APP_KEY = "523be4ddcc20678559583725c947b66c" //"984f6248377fc62d6594737d7dd5f449"
+var APP_ID = "7df8fc3b" // "b2a46cbc"
+var APP_KEY = "984f6248377fc62d6594737d7dd5f449" //"523be4ddcc20678559583725c947b66c" 
 
 //=========================================================
 // Bot Setup
@@ -88,8 +88,12 @@ bot.dialog('/getUserDataSex', [
         	session.userData.age = null;
         	session.userData.status = null;
     	} else {
-    		if(results.response == 'male' || results.response == 'female') {
-        		session.userData.sex = results.response;
+    		if(results.response.toLowerCase() == 'm' || results.response.toLowerCase() == 'male') {
+    			session.userData.sex = "male";
+    			console.log("store sex");
+    		}
+    		else if(results.response.toLowerCase() == 'f' || results.response.toLowerCase() == 'female') {
+        		session.userData.sex = "female";
         		console.log("store sex");
         	} else {
         		session.userData.sex = null;
@@ -247,7 +251,7 @@ bot.dialog('/interactLoop', [
     	var questionResponses = results.response;
 
     	if(session.userData.questions.question.type == 'single') {
-    		if(questionResponses.toLowerCase() == 'yes') {
+    		if(questionResponses.toLowerCase() == 'yes' || questionResponses.toLowerCase() == '1') {
     			session.userData.evidence.push({'id' : session.userData.questions.question.items[0].id, 'choice_id' : 'present'});
     		} else {
     			session.userData.evidence.push({'id' : session.userData.questions.question.items[0].id, 'choice_id' : 'absent'});
